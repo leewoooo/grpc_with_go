@@ -16,19 +16,19 @@ const (
 	port = "9000"
 )
 
-// OrderMangement implement unray proto service interface
-type OrderMangement struct {
+// OrderManagement implement unray proto service interface
+type OrderManagement struct {
 	database map[string]*pb.Order
 	pb.UnimplementedOrderMangementServer
 }
 
 // NewOrderMangementClient create new OrderMangement instance
-func NewOrderMangementClient(database map[string]*pb.Order) *OrderMangement {
-	return &OrderMangement{database: database}
+func NewOrderMangementClient(database map[string]*pb.Order) *OrderManagement {
+	return &OrderManagement{database: database}
 }
 
 // GetOrder get Order
-func (o *OrderMangement) GetOrder(ctx context.Context, ID *wrapperspb.StringValue) (*pb.Order, error) {
+func (o *OrderManagement) GetOrder(ctx context.Context, ID *wrapperspb.StringValue) (*pb.Order, error) {
 	order, ok := o.database[ID.GetValue()]
 
 	if !ok {
