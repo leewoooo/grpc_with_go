@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+import "google/protobuf/wrappers.proto";
+
+package ecommerce.v1;
+option go_package = "grpc_with_go/chap_02/proto/proto/unray/ordermanagement";
+
+service OrderMangement {
+    rpc getOrder (google.protobuf.StringValue) returns (Order);
+}
+
+message Order {
+    string id = 1;
+    repeated string items = 2;
+    string description = 3;
+    float price  = 4;
+    string destination = 5;
+}
