@@ -23,7 +23,7 @@ type OrderManagement struct {
 }
 
 // NewOrderMangementClient create new OrderMangement instance
-func NewOrderMangementClient(database map[string]*pb.Order) *OrderManagement {
+func NewOrderMangementClient(database map[string]*pb.Order) pb.OrderMangementServer {
 	return &OrderManagement{database: database}
 }
 
