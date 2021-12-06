@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+import "google/protobuf/wrappers.proto";
+
+package ecommerce;
+option go_package = "grpc_with_go/chap_03/proto/twoway";
+
+service OrderManagement {
+    rpc processOrders (stream google.protobuf.StringValue) returns (stream CombinedShipment);
+}
+
+message Order {
+    string id = 1;
+    repeated string items = 2;
+    string description = 3;
+    float price = 4;
+    string destination = 5;
+}
+
+message CombinedShipment {
+    string id = 1;
+    string status = 2;
+    repeated Order ordersList = 3;
+}
