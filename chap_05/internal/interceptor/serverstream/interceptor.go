@@ -26,9 +26,9 @@ func (w *wrappedStream) SendMsg(m interface{}) error {
 	return w.ServerStream.SendMsg(m)
 }
 
-// ServerStreamOrderManagementStream sercer stream interceptor
+// ServerStreamOrderManagementInterceptor server stream interceptor
 // https://github.com/grpc/grpc-go/blob/master/examples/features/interceptor/README.md#stream-interceptor-1
-func ServerStreamOrderManagementStream(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+func ServerStreamOrderManagementInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 	// 전처리
 	logrus.WithContext(ss.Context()).Infof("==== server stream interceptor method: %s ====", info.FullMethod)
 

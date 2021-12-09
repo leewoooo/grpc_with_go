@@ -63,7 +63,7 @@ func main() {
 	}
 
 	srv := grpc.NewServer(grpc.StreamInterceptor(
-		interceptor.ServerStreamOrderManagementStream,
+		interceptor.ServerStreamOrderManagementInterceptor,
 	))
 	orderManagement := NewOrderManagement(database)
 
