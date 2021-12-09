@@ -69,8 +69,8 @@ func main() {
 			Fatal("failed create listener instance")
 	}
 
-	srv := grpc.NewServer(grpc.ChainUnaryInterceptor(
-		unray.UnrayOrderManagementInterceptorfunc,
+	srv := grpc.NewServer(grpc.UnaryInterceptor(
+		unray.UnrayOrderManagementServerInterceptor,
 	))
 	orderManagement := NewOrderManagement(database)
 

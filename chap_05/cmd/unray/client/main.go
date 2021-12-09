@@ -6,6 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 
+	interceptor "grpc_with_go/chap_05/internal/interceptor/unray"
 	pb "grpc_with_go/chap_05/proto/unray"
 )
 
@@ -16,7 +17,11 @@ const (
 func main() {
 	ctx := context.Background()
 
-	conn, err := grpc.Dial(serverURL, grpc.WithInsecure())
+	conn, err := grpc.Dial(
+		serverURL,
+		grpc.WithInsecure(),
+		grpc.WithUnaryInterceptor(interceptor.UnrayOrderManagementClientInterceptor),
+	)
 	if err != nil {
 		logrus.WithContext(ctx).WithError(err).Fatal("failed get gRPC connection")
 	}
