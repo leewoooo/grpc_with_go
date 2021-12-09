@@ -32,8 +32,8 @@ type OrderMangement struct {
 	pb.UnimplementedOrderManagementServer
 }
 
-// NewOrderMangement create pb.OrderManagementServer instance
-func NewOrderMangement(db map[string]*pb.Order) pb.OrderManagementServer {
+// NewOrderManagement create pb.OrderManagementServer instance
+func NewOrderManagement(db map[string]*pb.Order) pb.OrderManagementServer {
 	return &OrderMangement{db: db}
 }
 
@@ -72,7 +72,7 @@ func main() {
 	srv := grpc.NewServer(grpc.ChainUnaryInterceptor(
 		unray.UnrayOrderManagementInterceptorfunc,
 	))
-	orderManagement := NewOrderMangement(database)
+	orderManagement := NewOrderManagement(database)
 
 	pb.RegisterOrderManagementServer(srv, orderManagement)
 
