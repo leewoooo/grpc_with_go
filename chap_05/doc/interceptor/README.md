@@ -168,7 +168,9 @@ srv := grpc.NewServer(grpc.StreamInterceptor( // 3
 
 스트리밍으로 들어오는 요청에 대한 인터셉터는 
 
-**전처리  -> Wrapper 구조체에서 구현한 `Recv(interface{}) error` 처리 -> RPC 호출 -> Wrapper 구조체에서 구현한 `Send(interface{}) error` 처리 -> 후처리** 순으로 진행된다.
+**전처리  -> [ Wrapper 구조체에서 구현한 `Recv(interface{}) error` 처리 -> RPC 호출 -> Wrapper 구조체에서 구현한 `Send(interface{}) error` 처리 ] -> 후처리** 순으로 진행된다.
+
+전처리와 후처리는 1번만 실행 되고 스트림이 종료될 때 까지는 래핑 인터페이스의 method가 동작한다.
 
 <br>
 
@@ -319,7 +321,9 @@ if err != nil {
 
 스트리밍으로 서버에게 요청을 보낼 때에는
 
-**전처리  -> Wrapper 구조체에서 구현한 `Send(interface{}) error` 처리 -> RPC 요청 -> Wrapper 구조체에서 구현한 `Recv(interface{}) error` 처리 -> 후처리** 순으로 진행된다.
+**전처리  -> [ Wrapper 구조체에서 구현한 `Send(interface{}) error` 처리 -> RPC 요청 -> Wrapper 구조체에서 구현한 `Recv(interface{}) error` 처리 ] -> 후처리** 순으로 진행된다.
+
+전처리와 후처리는 1번만 실행 되고 스트림이 종료될 때 까지는 래핑 인터페이스의 method가 동작한다.
 
 <br>
 
