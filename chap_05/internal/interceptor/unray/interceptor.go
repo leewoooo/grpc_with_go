@@ -27,10 +27,13 @@ func UnrayOrderManagementServerInterceptor(ctx context.Context, req interface{},
 // UnrayOrderManagementClientInterceptor unray client interceptor
 // https://github.com/grpc/grpc-go/blob/master/examples/features/interceptor/README.md#unary-interceptor
 func UnrayOrderManagementClientInterceptor(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+	// 전처리
 	logrus.WithContext(ctx).Infof("==== client unray interceptor method: %s req: %T ====", method, req)
 
+	// 실행
 	err := invoker(ctx, method, req, reply, cc, opts...)
 
+	// 후처리
 	if err != nil {
 		logrus.WithContext(ctx).WithError(err).Errorf("failed Reqeust RPC met")
 		return err
