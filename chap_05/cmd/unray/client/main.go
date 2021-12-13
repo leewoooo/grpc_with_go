@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -34,6 +35,11 @@ func main() {
 		Price:       199.99,
 		Destination: "korea seoul",
 	}
+
+	// ctx, cancel := context.WithDeadline(ctx, time.Now().Add(time.Microsecond*30))
+	// defer cancel()
+	ctx, cancel := context.WithTimeout(ctx, time.Second*3)
+	defer cancel()
 
 	ID, err := client.AddOrder(ctx, order)
 	if err != nil {

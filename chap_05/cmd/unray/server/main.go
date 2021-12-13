@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	unray "grpc_with_go/chap_05/internal/interceptor/unray"
 	pb "grpc_with_go/chap_05/proto/unray"
@@ -52,6 +53,10 @@ func (o *OrderMangement) AddOrder(ctx context.Context, order *pb.Order) (*pb.Ord
 
 // GetOrder implement OrderManagementServer GetOrder
 func (o *OrderMangement) GetOrder(ctx context.Context, ID *pb.OrderId) (*pb.Order, error) {
+	if ctx.Err() == context.DeadlineExceeded {
+		logrus.WithContext(ctx).Info("client Request DEADLINE_EXCEEDE")
+		return nil, errors.New("client Request DEADLINE_EXCEEDE")
+	}
 	order, ok := o.db[ID.GetId()]
 
 	if !ok {
