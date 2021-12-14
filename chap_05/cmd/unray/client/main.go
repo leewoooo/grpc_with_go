@@ -6,9 +6,13 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	interceptor "grpc_with_go/chap_05/internal/interceptor/unray"
 	pb "grpc_with_go/chap_05/proto/unray"
+
+	epb "google.golang.org/genproto/googleapis/rpc/errdetails"
 )
 
 const (
@@ -49,8 +53,22 @@ func main() {
 
 	selectedOrder, err := client.GetOrder(ctx, ID)
 	if err != nil {
-		logrus.WithContext(ctx).WithError(err).Errorf("failed GetOrder: %s", ID.GetId())
-		return
+		errCode := status.Code(err)
+		if errCode == codes.InvalidArgument {
+			logrus.WithContext(ctx).WithError(err).Error("failed GetOrder")
+
+			errorStatus := status.Convert(err)
+			for _, detail := range errorStatus.Details() {
+				switch info := detail.(type) {
+				case *epb.BadRequest_FieldViolation:
+					logrus.WithContext(ctx).Errorf("Reqeust Field Invalid: %s", info)
+				default:
+					logrus.WithContext(ctx).Errorf("Unexpected Error type:%s", info)
+				}
+			}
+		} else {
+			logrus.WithContext(ctx).WithError(err).Error("unhandled error with errorCode: %s", errCode)
+		}
 	}
 
 	logrus.WithContext(ctx).Infof("selected Order: %+v", selectedOrder)

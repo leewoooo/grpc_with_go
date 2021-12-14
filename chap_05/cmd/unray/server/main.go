@@ -8,10 +8,13 @@ import (
 	pb "grpc_with_go/chap_05/proto/unray"
 	"net"
 
+	epb "google.golang.org/genproto/googleapis/rpc/errdetails"
+
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var (
@@ -57,6 +60,28 @@ func (o *OrderMangement) GetOrder(ctx context.Context, ID *pb.OrderId) (*pb.Orde
 		logrus.WithContext(ctx).Info("client Request DEADLINE_EXCEEDE")
 		return nil, errors.New("client Request DEADLINE_EXCEEDE")
 	}
+
+	// GetOrder id가 1보다 작은 경우
+	if ID.GetId() < "1" {
+		logrus.WithContext(ctx).Error("Order ID is Invalid Received OrderID: %s", ID.GetId())
+
+		errStatus := status.New(codes.InvalidArgument, "Invalid information received")
+		ds, err := errStatus.WithDetails(
+			&epb.BadRequest_FieldViolation{
+				Field: "ID",
+				Description: fmt.Sprintf(
+					"Order ID received is not valid: %s",
+					ID.GetId(),
+				),
+			},
+		)
+		if err != nil {
+			return nil, errStatus.Err()
+		}
+
+		return nil, ds.Err()
+	}
+
 	order, ok := o.db[ID.GetId()]
 
 	if !ok {
