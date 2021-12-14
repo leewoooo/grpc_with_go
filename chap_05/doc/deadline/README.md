@@ -49,7 +49,7 @@ client := pb.NewOrderManagementClient(conn)
 ctx, cancel := context.WithDeadline(context.Bacground(), time.Now().Add(time.Microsecond*30)) // 1
 defer cancel()
 
-ID, err := client.AddOrder(ctx, order) // 3
+ID, err := client.AddOrder(ctx, order) // 2
 if err != nil {
     logrus.WithContext(ctx).WithError(err).Errorf("failed AddOrder: %+v", order)
     return
