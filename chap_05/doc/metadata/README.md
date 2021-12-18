@@ -41,12 +41,13 @@ func (s *server) SomeRPC(ctx context.Context, in *pb.SomeRequest) (*pb.SomeRespo
 
 ## 메타데이터 전송과 수신 : 클라이언트 side
 
+### 전송
+
 메타데이터를 생성하고 RPC 호출 컨텍스트를 지정함으로써 **클라이언트에서 gRPC서버로 메타데이터를 보낼 수 있다.**
 
 메타데이터를 서버로 보내는 방법은 두가지가 있는데 **권장하는 방법은 key,value를 context에 추가를 하는 것이다.** 
 
-// TODO: 병합되는 것 직접 해봐야 함.
-첫번째는 `AppendToOutgoingContext`를 이용하여 context에 메타데이터를 추가할 수 있는데 메타데이터를 추가할 때 키가 존재한다면 **병합이 되어 메타데이터에 추가된다.** 
+첫번째는 `AppendToOutgoingContext`를 이용하여 context에 메타데이터를 추가할 수 있는데 메타데이터를 추가할 때 키가 존재한다면 **병합이 되어 메타데이터에 추가된다. (해당 key는 []stirng을 값으로 가짐)** 
 
 코드는 아래와 같다.
 
@@ -97,6 +98,105 @@ stream, err := client.SomeStreamingRPC(ctx)
 4. `Join()`을 이용하여 **추출한 메타데이터와 새로운 메타데이터를 합친 후** `NewOutgoingContext()`를 이용하여 기존의 메타데이터와 **대체한다.**
 > Joint()은 두 개의 메타데이터를 받아 반복문을 돌며 새로운 메타데이터에 추가 한 후 메타데이터를 return한다. <br> (https://github.com/grpc/grpc-go/blob/79e9c9571a1949d3abae203a127fa5d4f02fb071/metadata/metadata.go#L137)
 
+<br>
+
+### 수신
+
+컨텍스트에서 설정한 메타데이터는 **gRPC 헤더나 트레일러 레벨로 변환되기 때문에 클라이언트가 해당 헤더를 보내면 수신자가 헤더로 수신을 해야한다.**
+
+따라서 클라이언트로에서 메타데이터를 수신할 때는 **헤더나 트레일러로 취급해야 한다.** 
+
+```go
+// unray
+var header, trailer metadata.MD // variable to store header and trailer // 1
+r, err := client.SomeRPC( // 2
+    ctx,
+    someRequest,
+    grpc.Header(&header),    // will retrieve header
+    grpc.Trailer(&trailer),  // will retrieve trailer
+)
+
+// stream
+header, err := stream.Header() // 3
+
+trailer := stream.Trailer() // 4
+
+// do something with header and trailer
+```
+
+1. RPC 호출에서 반환될 헤더(메타데이터)와 트레일러를 저장할 변수이다.
+
+2. 단일 RPC에 대해 반환되는 값을 저장하려면 gRPC 서비스 method를 호출할 때 `grpc.CallOption`으로 **헤더와 트레일러의 참조(주소 값)을 전달해야 한다.** 
+
+3. 스트리밍 RPC의 경우 스트림에서 **헤더를 가져온다.**
+
+4. 스트림에서 **트레일러**를 가져오는데 트레일러는 상태코드와 상태 메세지를 보내는데 사용된다.
+
+<br>
+
+## 메타데이터 전송과 수신 : 서버 side
+
+### 수신
+
+서버에서 메타데이터를 수신하는 것도 매우 간단하다. `metadata.FromIncomingContext(ctx)`를 이용하여 컨텍스트로 부터 간단하게 메타데이터를 얻을 수 있다.
+
+```go
+// unray
+func (s *server) SomeRPC(ctx context.Context, in *pb.someRequest) (*pb.someResponse, error) {
+    md, ok := metadata.FromIncomingContext(ctx) // 1
+    // do something with metadata
+}
+
+// stream
+func (s *server) SomeStreamingRPC(stream pb.Service_SomeStreamingRPCServer) error {
+    md, ok := metadata.FromIncomingContext(stream.Context()) // get context from stream // 2
+    // do something with metadata
+}
+```
+
+1. 단일 RPC의 경우 인자로 들어온 **컨텍스트로 부터 메타데이터를 얻는다.**
+
+2. 스트리밍 RPC의 경우 **스트림에서 얻어온 컨텍스트로 부터 메타데이터를 추출한다.**
+
+<br>
+
+### 전송
+
+서버에서 메타데이터를 보내려면 메타데이터가 있는 **헤더를 보내거나 메타데이터가 있는 트레일러를 지정한다.**
+
+메타데이터를 생성하는 것은 **클라이언트와 동일하다** 예제 코드를 살펴보자면 다음과 같다.
+
+```go
+// unray
+func (s *server) SomeRPC(ctx context.Context, in *pb.someRequest) (*pb.someResponse, error) {
+    // create and send header
+    header := metadata.Pairs("header-key", "val") // 1
+    grpc.SendHeader(ctx, header) // 2
+    // create and set trailer
+    trailer := metadata.Pairs("trailer-key", "val") // 1
+    grpc.SetTrailer(ctx, trailer) // 3
+}
+
+// stream
+func (s *server) SomeStreamingRPC(stream pb.Service_SomeStreamingRPCServer) error {
+    // create and send header
+    header := metadata.Pairs("header-key", "val") // 1
+    stream.SendHeader(header) // 4
+    // create and set trailer
+    trailer := metadata.Pairs("trailer-key", "val") // 1
+    stream.SetTrailer(trailer) // 5
+}
+```
+
+1. `Pairs()`를 이용하여 메타데이터를 생성한다.
+
+2. grpc 패키지의 `SendHeader()`를 이용하여 생성한 메타데이터를 컨텍스트에 포함시킨다.
+
+3. `SetTrailer()`를 이용하여 생성한 메타데이터를 트레일러로 지정한다.
+
+4. **stream 인스턴스**에 생성한 메타데이터를 포함시킨다.
+
+5. **stream 인스턴스**에 생성한 메타데이터를 트레일러로 지정한다.
 
 
 
